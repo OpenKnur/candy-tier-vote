@@ -170,6 +170,41 @@
       width: 100%;
     }
 
+    .identity-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(168, 85, 247, 0.08);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .identity-bar .who {
+      color: #c084fc;
+      font-weight: 600;
+    }
+
+    .identity-bar .switch-btn {
+      background: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #71717a;
+      padding: 4px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+    }
+
+    .identity-bar .switch-btn:hover {
+      color: #e4e4e7;
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+    }
+
     /* Tier List */
     .tier-list { display: flex; flex-direction: column; gap: 8px; }
 
@@ -486,6 +521,10 @@
     <!-- VOTE VIEW -->
     <div class="vote-view active" id="voteView">
       <div class="name-section">
+        <div class="identity-bar" id="identityBar">
+          <span>👤 Zalogowany jako: <span class="who" id="identityName"></span></span>
+          <button class="switch-btn" onclick="switchIdentity()">Zmień osobę</button>
+        </div>
         <label>Kto głosuje? 👇</label>
         <div class="name-input-row">
           <input type="text" id="nameInput" placeholder="Imię i nazwisko" autocomplete="name">
@@ -557,7 +596,56 @@
     let currentTab = 'vote';
     let draggedItem = null;
 
-    // Initialize candy items in unranked zone
+    // ─── Cookie helpers ────────────────────────────────────────────
+    function setCookie(name, value, days) {
+      const d = new Date();
+      d.setTime(d.getTime() + days * 86400000);
+      document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+    }
+
+    function getCookie(name) {
+      const match = document.cookie.split('; ').find(c => c.startsWith(encodeURIComponent(name) + '='));
+      return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null;
+    }
+
+    function deleteCookie(name) {
+      document.cookie = `${encodeURIComponent(name)}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+    }
+
+    function getSavedName() {
+      return getCookie('candy_voter_name');
+    }
+
+    function saveName(name) {
+      setCookie('candy_voter_name', name, 30); // 30 days
+    }
+
+    function clearSavedName() {
+      deleteCookie('candy_voter_name');
+    }
+
+    // ─── Identity bar ──────────────────────────────────────────────
+    function showIdentityBar(name) {
+      document.getElementById('identityBar').style.display = 'flex';
+      document.getElementById('identityName').textContent = name;
+    }
+
+    function hideIdentityBar() {
+      document.getElementById('identityBar').style.display = 'none';
+    }
+
+    function switchIdentity() {
+      clearSavedName();
+      hideIdentityBar();
+      const input = document.getElementById('nameInput');
+      input.value = '';
+      input.style.display = 'block';
+      document.getElementById('votedBadge').style.display = 'none';
+      document.getElementById('submitBtn').disabled = true;
+      input.focus();
+    }
+
+    // ─── Tier list init ────────────────────────────────────────────
     function initTierList() {
       const unranked = document.getElementById('unrankedItems');
       unranked.innerHTML = '';
@@ -681,7 +769,6 @@
 
     function updateSubmitState() {
       const name = document.getElementById('nameInput').value.trim();
-      const unranked = document.getElementById('unrankedItems').querySelectorAll('.candy-item');
       const allRanked = document.querySelectorAll('.tier-items .candy-item');
       const btn = document.getElementById('submitBtn');
       
@@ -718,6 +805,10 @@
         const data = await resp.json();
         
         if (resp.ok) {
+          // Save name to cookie on successful vote
+          saveName(name);
+          showIdentityBar(name);
+
           showToast(data.message, 'success');
           document.getElementById('votedBadge').style.display = 'block';
           document.getElementById('nameInput').style.display = 'none';
@@ -735,11 +826,11 @@
       }
     }
 
-    async function checkIfVoted() {
-      const name = document.getElementById('nameInput').value.trim();
-      if (name.split(/\s+/).length < 2) {
+    async function checkIfVoted(name) {
+      if (!name || name.split(/\s+/).length < 2) {
         document.getElementById('votedBadge').style.display = 'none';
         document.getElementById('nameInput').style.display = 'block';
+        hideIdentityBar();
         updateSubmitState();
         return;
       }
@@ -749,10 +840,12 @@
         const data = await resp.json();
         
         if (data.voted) {
+          showIdentityBar(name);
           document.getElementById('votedBadge').style.display = 'block';
           document.getElementById('nameInput').style.display = 'none';
           document.getElementById('submitBtn').disabled = true;
         } else {
+          hideIdentityBar();
           document.getElementById('votedBadge').style.display = 'none';
           document.getElementById('nameInput').style.display = 'block';
           updateSubmitState();
@@ -832,14 +925,26 @@
       setTimeout(() => { toast.classList.remove('show'); }, 4000);
     }
 
-    // Init
+    // ─── Init: load cookie → auto-fill → auto-check ────────────────
     document.getElementById('nameInput').addEventListener('input', () => {
       updateSubmitState();
-      checkIfVoted();
+      const name = document.getElementById('nameInput').value.trim();
+      if (name.split(/\s+/).length >= 2) {
+        checkIfVoted(name);
+      }
     });
 
     initTierList();
     loadResults();
+
+    // Restore identity from cookie
+    (function restoreIdentity() {
+      const saved = getSavedName();
+      if (saved && saved.split(/\s+/).length >= 2) {
+        document.getElementById('nameInput').value = saved;
+        checkIfVoted(saved);
+      }
+    })();
   </script>
 </body>
 </html>

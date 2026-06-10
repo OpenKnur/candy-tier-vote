@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍬 Tier List Słodyczy do Biura</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f13;
+      color: #e4e4e7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .bg-glow {
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(236, 72, 153, 0.06) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #a855f7, #ec4899, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+
+    header p {
+      color: #71717a;
+      font-size: 0.95rem;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: #a1a1aa;
+    }
+
+    .stat strong { color: #e4e4e7; font-weight: 700; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: #71717a;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+    }
+
+    .tab:hover:not(.active) {
+      color: #a1a1aa;
+      background: rgba(255,255,255,0.03);
+    }
+
+    /* Name input */
+    .name-section {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .name-section label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      color: #a1a1aa;
+    }
+
+    .name-input-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .name-input-row input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #e4e4e7;
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .name-input-row input:focus {
+      border-color: rgba(168, 85, 247, 0.5);
+    }
+
+    .name-input-row input::placeholder {
+      color: #52525b;
+    }
+
+    .voted-badge {
+      display: none;
+      padding: 12px 20px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 10px;
+      color: #4ade80;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* Tier List */
+    .tier-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .tier-row {
+      display: flex;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      min-height: 72px;
+      transition: border-color 0.2s;
+    }
+
+    .tier-row.drag-over { border-color: rgba(168, 85, 247, 0.5); }
+
+    .tier-label {
+      width: 72px;
+      min-width: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .tier-S .tier-label { background: linear-gradient(135deg, #dc2626, #f97316); }
+    .tier-A .tier-label { background: linear-gradient(135deg, #f97316, #eab308); }
+    .tier-B .tier-label { background: linear-gradient(135deg, #eab308, #22c55e); }
+    .tier-C .tier-label { background: linear-gradient(135deg, #22c55e, #3b82f6); }
+    .tier-D .tier-label { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+    .tier-items {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.02);
+      align-items: center;
+      min-height: 56px;
+    }
+
+    .candy-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.2s;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .candy-item:active { cursor: grabbing; }
+    .candy-item:hover { 
+      transform: translateY(-2px); 
+      border-color: rgba(168, 85, 247, 0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .candy-item .emoji { font-size: 1.2rem; }
+
+    .candy-item.dragging {
+      opacity: 0.4;
+      transform: scale(0.95);
+    }
+
+    .candy-item[data-candy="Jezyki"] .emoji::before { content: "👅"; }
+    .candy-item[data-candy="Delicje"] .emoji::before { content: "🍫"; }
+    .candy-item[data-candy="Delicje Wiśniowe"] .emoji::before { content: "🍒"; }
+    .candy-item[data-candy="Oreo"] .emoji::before { content: "🍪"; }
+    .candy-item[data-candy="Ciastka Maślane"] .emoji::before { content: "🧈"; }
+    .candy-item[data-candy="Ciastka Kakaowe"] .emoji::before { content: "🟤"; }
+    .candy-item[data-candy="BelVita"] .emoji::before { content: "🥣"; }
+
+    /* Unranked zone */
+    .unranked-zone {
+      margin-bottom: 24px;
+      padding: 20px;
+      border: 2px dashed rgba(255,255,255,0.1);
+      border-radius: 16px;
+      min-height: 80px;
+      text-align: center;
+      background: rgba(255,255,255,0.01);
+      transition: all 0.2s;
+    }
+
+    .unranked-zone.drag-over {
+      border-color: rgba(168, 85, 247, 0.5);
+      background: rgba(168, 85, 247, 0.05);
+    }
+
+    .unranked-zone h3 {
+      font-size: 0.85rem;
+      color: #52525b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .unranked-zone .candy-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .instructions {
+      font-size: 0.8rem;
+      color: #52525b;
+      margin-top: 8px;
+    }
+
+    /* Submit button */
+    .submit-section {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .btn-submit {
+      padding: 14px 48px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      color: #fff;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    /* Results view */
+    .results-view {
+      display: none;
+    }
+
+    .results-view.active { display: block; }
+    .vote-view { display: none; }
+    .vote-view.active { display: block; }
+
+    .result-tier-row {
+      display: flex;
+      align-items: stretch;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 8px;
+    }
+
+    .result-tier-label {
+      width: 72px;
+      min-width: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .result-tier-items {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result-candy {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+
+    .result-candy-name {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-candy-meta {
+      font-size: 0.8rem;
+      color: #71717a;
+    }
+
+    .result-candy-meta strong { color: #a1a1aa; }
+
+    .empty-tier {
+      color: #3f3f46;
+      font-style: italic;
+      font-size: 0.85rem;
+    }
+
+    .voters-list {
+      margin-top: 24px;
+      padding: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+    }
+
+    .voters-list h3 {
+      font-size: 0.9rem;
+      color: #71717a;
+      margin-bottom: 12px;
+    }
+
+    .voter-chip {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin: 2px 4px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      z-index: 1000;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .toast.success {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+
+    .toast.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      .tier-label, .result-tier-label { width: 52px; min-width: 52px; font-size: 1.2rem; }
+      .candy-item { padding: 6px 12px; font-size: 0.8rem; }
+      .name-input-row { flex-direction: column; }
+    }
+
+    /* Animations */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tier-list > * { animation: slideUp 0.3s ease-out backwards; }
+    .tier-list > *:nth-child(1) { animation-delay: 0.05s; }
+    .tier-list > *:nth-child(2) { animation-delay: 0.1s; }
+    .tier-list > *:nth-child(3) { animation-delay: 0.15s; }
+    .tier-list > *:nth-child(4) { animation-delay: 0.2s; }
+    .tier-list > *:nth-child(5) { animation-delay: 0.25s; }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="container">
+    <header>
+      <h1>🍬 Tier List Słodyczy</h1>
+      <p>Do biura — 1 głos na osobę tygodniowo</p>
+      <div class="stats-bar">
+        <div class="stat">🗓️ <span id="weekLabel">—</span></div>
+        <div class="stat">🗳️ Tydzień: <strong id="weekVoteCount">0</strong> głosów</div>
+        <div class="stat">📊 Łącznie: <strong id="allTimeCount">0</strong> głosów</div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="vote" onclick="switchTab('vote')">🗳️ Głosuj</button>
+      <button class="tab" data-tab="results" onclick="switchTab('results')">📊 Wyniki</button>
+    </div>
+
+    <!-- VOTE VIEW -->
+    <div class="vote-view active" id="voteView">
+      <div class="name-section">
+        <label>Kto głosuje? 👇</label>
+        <div class="name-input-row">
+          <input type="text" id="nameInput" placeholder="Imię i nazwisko" autocomplete="name">
+          <div class="voted-badge" id="votedBadge">✅ Już głosowałeś/aś w tym tygodniu!</div>
+        </div>
+      </div>
+
+      <div class="unranked-zone" id="unrankedZone">
+        <h3>📦 Niesklasyfikowane</h3>
+        <div class="candy-items" id="unrankedItems"></div>
+        <p class="instructions">Przeciągnij słodycze do odpowiedniej kategorii ⬇️</p>
+      </div>
+
+      <div class="tier-list" id="tierList">
+        <div class="tier-row tier-S" data-tier="S">
+          <div class="tier-label">S</div>
+          <div class="tier-items" data-tier="S"></div>
+        </div>
+        <div class="tier-row tier-A" data-tier="A">
+          <div class="tier-label">A</div>
+          <div class="tier-items" data-tier="A"></div>
+        </div>
+        <div class="tier-row tier-B" data-tier="B">
+          <div class="tier-label">B</div>
+          <div class="tier-items" data-tier="B"></div>
+        </div>
+        <div class="tier-row tier-C" data-tier="C">
+          <div class="tier-label">C</div>
+          <div class="tier-items" data-tier="C"></div>
+        </div>
+        <div class="tier-row tier-D" data-tier="D">
+          <div class="tier-label">D</div>
+          <div class="tier-items" data-tier="D"></div>
+        </div>
+      </div>
+
+      <div class="submit-section">
+        <button class="btn-submit" id="submitBtn" disabled onclick="submitVote()">Wyślij głos 🍬</button>
+        <p class="instructions" style="margin-top: 10px;">Każdy słodycz musi być w kategorii (oprócz tych co zostawiasz w "niesklasyfikowanych")</p>
+      </div>
+    </div>
+
+    <!-- RESULTS VIEW -->
+    <div class="results-view" id="resultsView"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const CANDIES = [
+      { name: 'Jezyki', emoji: '👅' },
+      { name: 'Delicje', emoji: '🍫' },
+      { name: 'Delicje Wiśniowe', emoji: '🍒' },
+      { name: 'Oreo', emoji: '🍪' },
+      { name: 'Ciastka Maślane', emoji: '🧈' },
+      { name: 'Ciastka Kakaowe', emoji: '🟤' },
+      { name: 'BelVita', emoji: '🥣' }
+    ];
+
+    const TIER_COLORS = {
+      S: 'linear-gradient(135deg, #dc2626, #f97316)',
+      A: 'linear-gradient(135deg, #f97316, #eab308)',
+      B: 'linear-gradient(135deg, #eab308, #22c55e)',
+      C: 'linear-gradient(135deg, #22c55e, #3b82f6)',
+      D: 'linear-gradient(135deg, #6b7280, #4b5563)'
+    };
+
+    let currentTab = 'vote';
+    let draggedItem = null;
+
+    // Initialize candy items in unranked zone
+    function initTierList() {
+      const unranked = document.getElementById('unrankedItems');
+      unranked.innerHTML = '';
+      
+      CANDIES.forEach(candy => {
+        const el = createCandyElement(candy);
+        unranked.appendChild(el);
+      });
+
+      setupDropZones();
+    }
+
+    function createCandyElement(candy) {
+      const el = document.createElement('div');
+      el.className = 'candy-item';
+      el.setAttribute('draggable', 'true');
+      el.setAttribute('data-candy', candy.name);
+      el.innerHTML = `<span class="emoji">${candy.emoji}</span>${candy.name}`;
+
+      el.addEventListener('dragstart', (e) => {
+        draggedItem = el;
+        el.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', candy.name);
+      });
+
+      el.addEventListener('dragend', () => {
+        el.classList.remove('dragging');
+        draggedItem = null;
+        document.querySelectorAll('.drag-over').forEach(z => z.classList.remove('drag-over'));
+      });
+
+      // Touch support
+      let touchStartX, touchStartY, ghostEl;
+      el.addEventListener('touchstart', (e) => {
+        draggedItem = el;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        
+        ghostEl = el.cloneNode(true);
+        ghostEl.style.position = 'fixed';
+        ghostEl.style.zIndex = '9999';
+        ghostEl.style.pointerEvents = 'none';
+        ghostEl.style.opacity = '0.8';
+        ghostEl.style.transform = 'scale(1.05)';
+        document.body.appendChild(ghostEl);
+      }, { passive: true });
+
+      el.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (ghostEl) {
+          ghostEl.style.left = (touch.clientX - 50) + 'px';
+          ghostEl.style.top = (touch.clientY - 20) + 'px';
+        }
+        
+        // Highlight drop zone under finger
+        document.querySelectorAll('.drag-over').forEach(z => z.classList.remove('drag-over'));
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (target) {
+          const zone = target.closest('.tier-items, .candy-items');
+          if (zone) zone.classList.add('drag-over');
+        }
+      }, { passive: false });
+
+      el.addEventListener('touchend', (e) => {
+        if (ghostEl) {
+          ghostEl.remove();
+          ghostEl = null;
+        }
+        
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (target) {
+          const zone = target.closest('.tier-items, .candy-items');
+          if (zone && draggedItem) {
+            zone.appendChild(draggedItem);
+            updateSubmitState();
+          }
+        }
+        
+        document.querySelectorAll('.drag-over').forEach(z => z.classList.remove('drag-over'));
+        draggedItem = null;
+      });
+
+      return el;
+    }
+
+    function setupDropZones() {
+      // Tier items zones
+      document.querySelectorAll('.tier-items, #unrankedItems').forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          zone.classList.add('drag-over');
+        });
+
+        zone.addEventListener('dragleave', () => {
+          zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+          if (draggedItem) {
+            zone.appendChild(draggedItem);
+            updateSubmitState();
+          }
+        });
+      });
+
+      // Tier row click zones (click to cycle)
+      document.querySelectorAll('.tier-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          // Don't intercept clicks on candy items
+          if (e.target.closest('.candy-item')) return;
+        });
+      });
+    }
+
+    function updateSubmitState() {
+      const name = document.getElementById('nameInput').value.trim();
+      const unranked = document.getElementById('unrankedItems').querySelectorAll('.candy-item');
+      const allRanked = document.querySelectorAll('.tier-items .candy-item');
+      const btn = document.getElementById('submitBtn');
+      
+      // Must have name and at least some items ranked
+      btn.disabled = !(name && name.split(/\s+/).length >= 2 && allRanked.length > 0);
+    }
+
+    function getRankings() {
+      const rankings = {};
+      document.querySelectorAll('.tier-items').forEach(zone => {
+        const tier = zone.getAttribute('data-tier');
+        zone.querySelectorAll('.candy-item').forEach(item => {
+          rankings[item.getAttribute('data-candy')] = tier;
+        });
+      });
+      return rankings;
+    }
+
+    async function submitVote() {
+      const name = document.getElementById('nameInput').value.trim();
+      const rankings = getRankings();
+      const btn = document.getElementById('submitBtn');
+      
+      btn.disabled = true;
+      btn.textContent = 'Wysyłanie...';
+
+      try {
+        const resp = await fetch('/api/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName: name, rankings })
+        });
+
+        const data = await resp.json();
+        
+        if (resp.ok) {
+          showToast(data.message, 'success');
+          document.getElementById('votedBadge').style.display = 'block';
+          document.getElementById('nameInput').style.display = 'none';
+          btn.textContent = 'Wysłano ✅';
+          loadResults();
+        } else {
+          showToast(data.error, 'error');
+          btn.disabled = false;
+          btn.textContent = 'Wyślij głos 🍬';
+        }
+      } catch (err) {
+        showToast('Błąd połączenia z serwerem 😢', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Wyślij głos 🍬';
+      }
+    }
+
+    async function checkIfVoted() {
+      const name = document.getElementById('nameInput').value.trim();
+      if (name.split(/\s+/).length < 2) {
+        document.getElementById('votedBadge').style.display = 'none';
+        document.getElementById('nameInput').style.display = 'block';
+        updateSubmitState();
+        return;
+      }
+
+      try {
+        const resp = await fetch(`/api/check/${encodeURIComponent(name)}`);
+        const data = await resp.json();
+        
+        if (data.voted) {
+          document.getElementById('votedBadge').style.display = 'block';
+          document.getElementById('nameInput').style.display = 'none';
+          document.getElementById('submitBtn').disabled = true;
+        } else {
+          document.getElementById('votedBadge').style.display = 'none';
+          document.getElementById('nameInput').style.display = 'block';
+          updateSubmitState();
+        }
+      } catch (err) {
+        // Server unreachable, allow voting attempt
+      }
+    }
+
+    async function loadResults() {
+      try {
+        const resp = await fetch('/api/results');
+        const data = await resp.json();
+        
+        document.getElementById('weekLabel').textContent = data.week;
+        document.getElementById('weekVoteCount').textContent = data.weekVotes;
+        document.getElementById('allTimeCount').textContent = data.allTimeVotes;
+
+        const view = document.getElementById('resultsView');
+        let html = '';
+
+        const tierOrder = ['S', 'A', 'B', 'C', 'D'];
+        tierOrder.forEach(tier => {
+          const items = data.standings[tier] || [];
+          html += `
+            <div class="result-tier-row">
+              <div class="result-tier-label" style="background: ${TIER_COLORS[tier]}">${tier}</div>
+              <div class="result-tier-items">
+          `;
+          
+          if (items.length === 0) {
+            html += `<div class="empty-tier">Pusto</div>`;
+          } else {
+            items.forEach(item => {
+              const candy = CANDIES.find(c => c.name === item.name);
+              html += `
+                <div class="result-candy">
+                  <span class="result-candy-name">${candy ? candy.emoji : '🍬'} ${item.name}</span>
+                  <span class="result-candy-meta">Średnia: <strong>${item.avgScore}</strong> · ${item.voteCount} ${item.voteCount === 1 ? 'głos' : 'głosów'}</span>
+                </div>
+              `;
+            });
+          }
+          
+          html += `</div></div>`;
+        });
+
+        if (data.voters.length > 0) {
+          html += `<div class="voters-list"><h3>Osoby które głosowały w ${data.week}:</h3>`;
+          data.voters.forEach(v => {
+            html += `<span class="voter-chip">${v}</span>`;
+          });
+          html += `</div>`;
+        }
+
+        view.innerHTML = html;
+      } catch (err) {
+        document.getElementById('resultsView').innerHTML = '<p style="text-align:center;color:#71717a;">Nie udało się załadować wyników 😢</p>';
+      }
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      
+      document.getElementById('voteView').classList.toggle('active', tab === 'vote');
+      document.getElementById('resultsView').classList.toggle('active', tab === 'results');
+      
+      if (tab === 'results') loadResults();
+    }
+
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    }
+
+    // Init
+    document.getElementById('nameInput').addEventListener('input', () => {
+      updateSubmitState();
+      checkIfVoted();
+    });
+
+    initTierList();
+    loadResults();
+  </script>
+</body>
+</html>

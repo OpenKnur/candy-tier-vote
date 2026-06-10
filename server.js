@@ -82,7 +82,7 @@ app.get('/api/results', (req, res) => {
   
   // Get all candy names
   const allCandies = [
-    'Jezyki', 'Delicje', 'Delicje Wiśniowe', 'Oreo', 
+    'Jeżyki', 'Delicje', 'Delicje Wiśniowe', 'Oreo', 
     'Ciastka Maślane', 'Ciastka Kakaowe', 'BelVita'
   ];
 

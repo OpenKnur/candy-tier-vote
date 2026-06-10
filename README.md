@@ -30,4 +30,4 @@ node server.js
 
 ## Słodyczy w zestawie
 
-👅 Jezyki · 🍫 Delicje · 🍒 Delicje Wiśniowe · 🍪 Oreo · 🧈 Ciastka Maślane · 🟤 Ciastka Kakaowe · 🥣 BelVita
+🦔 Jeżyki · 🍫 Delicje · 🍒 Delicje Wiśniowe · 🍪 Oreo · 🧈 Ciastka Maślane · 🟤 Ciastka Kakaowe · 🥣 BelVita
